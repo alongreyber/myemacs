@@ -50,6 +50,9 @@ This function should only modify configuration layer settings."
      (javascript :variables
              javascript-backend 'lsp
              )
+     (vue :variables
+          vue-backend 'lsp
+          )
      (json :variables
            json-backend 'lsp)
      emacs-lisp
@@ -584,6 +587,7 @@ before packages are loaded."
   (spacemacs/toggle-maximize-buffer)
 
   ;; Autopep8 on save
+  (require 'py-autopep8)
   (add-hook 'python-mode-hook 'py-autopep8-enable-on-save)
   (setq py-autopep8-options '("--ignore=E402"))
 
