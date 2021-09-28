@@ -1,0 +1,3 @@
+keybind,description
+SPC D f f,Compare two files visually using Ediff
+SPC g s magit-ediff-compare, Compare a pull request using Ediff
