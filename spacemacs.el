@@ -32,7 +32,19 @@ This function should only modify configuration layer settings."
 
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(html
+   '(csv
+     (go :variables
+         go-tab-width 4
+         godoc-at-point-function 'godoc-gogetdoc
+         )
+     vimscript
+     (rust :variables
+           rust-backend 'lsp
+           )
+     (lsp :variables
+          lsp-rust-server 'rust-analyzer)
+     nginx
+     html
      react
      yaml
      (python :variables
@@ -91,7 +103,13 @@ This function should only modify configuration layer settings."
 
      (treemacs :variables treemacs-use-filewatch-mode t)
 
+
      eaf
+
+     ; Enable evil bindings in calculator
+     (spacemacs-evil :variables
+                     spacemacs-evil-collection-allowed-list
+                     '(calc))
      )
 
 
@@ -106,6 +124,7 @@ This function should only modify configuration layer settings."
    dotspacemacs-additional-packages
    '(
      py-autopep8
+     github-review
     )
 
    ;; A list of packages that cannot be updated.
@@ -550,6 +569,13 @@ This function is called immediately after `dotspacemacs/init', before layer
 configuration.
 It is mostly for variables that should be set before packages are loaded.
 If you are unsure, try setting them in `dotspacemacs/user-config' first."
+
+  ; Use a separate file for custom adjustments
+  (customize-set-variable
+   'custom-file (file-truename (concat user-emacs-directory "custom.el")) "Separate custom file")
+  (unless (file-exists-p custom-file)
+    (write-region "" nil custom-file))
+  (load custom-file)
   )
 
 (defun dotspacemacs/user-load ()
@@ -565,12 +591,38 @@ This function is called at the very end of Spacemacs startup, after layer
 configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
+
+
+  (defun air-org-skip-subtree-if-priority (priority)
+    "Helper function
+     Skip an agenda subtree if it has a priority of PRIORITY.
+     PRIORITY may be one of the characters ?A, ?B, or ?C."
+    (let ((subtree-end (save-excursion (org-end-of-subtree t)))
+          (pri-value (* 1000 (- org-lowest-priority priority)))
+          (pri-current (org-get-priority (thing-at-point 'line t))))
+      (if (= pri-value pri-current)
+          subtree-end
+        nil)))
+
   ;; Configure org mode
   (with-eval-after-load 'org
 
     (setq org-todo-keywords '((sequence "TODO(t)" "STARTED(s)" "WAITING(w)" "|" "DONE(d)")))
     (setq org-agenda-files '("~/org/"))
     (setq org-clock-persist t)
+    (org-clock-persistence-insinuate)
+    ;; Custom agenda view that separates
+    ;; high priority tasks from the rest
+    (setq org-agenda-custom-commands
+          '(("c" "Simple agenda view"
+             ((tags "PRIORITY=\"A\""
+                    ((org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
+                     (org-agenda-overriding-header "High-priority unfinished tasks:")))
+              (agenda "")
+              (alltodo ""
+                       ((org-agenda-skip-function
+                         '(or (air-org-skip-subtree-if-priority ?A)
+                              (org-agenda-skip-if nil '(scheduled deadline))))))))))
   )
 
   ;; Keep the cursor centered in buffers
@@ -583,7 +635,7 @@ before packages are loaded."
   (global-company-mode)
 
   ;; Org mode on startup
-  (org-agenda-list)
+  (org-agenda nil "c")
   (switch-to-buffer "*Org Agenda*")
   (spacemacs/toggle-maximize-buffer)
 
@@ -605,30 +657,13 @@ before packages are loaded."
                                               (":box_cross:" "☒")
                                               ))
   (abbrev-mode 1) ; turn on abbrev mode
+
+  ; Customize calculator
+  (setq calc-context-sensitive-enter 1)
   )
 
-;; Do not write anything past this comment. This is where Emacs will
-;; auto-generate custom variable definitions.
-(defun dotspacemacs/emacs-custom-settings ()
-  "Emacs custom settings.
-This is an auto-generated function, do not modify its content directly, use
-Emacs customize menu instead.
-This function is called at the very end of Spacemacs initialization."
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(evil-want-Y-yank-to-eol nil)
- '(helm-completion-style 'emacs)
- '(lsp-file-watch-ignored-directories
-   '("[/\\\\]\\.git\\'" "[/\\\\]\\.hg\\'" "[/\\\\]\\.bzr\\'" "[/\\\\]_darcs\\'" "[/\\\\]\\.svn\\'" "[/\\\\]_FOSSIL_\\'" "[/\\\\]\\.idea\\'" "[/\\\\]\\.ensime_cache\\'" "[/\\\\]\\.eunit\\'" "[/\\\\]node_modules" "[/\\\\]\\.fslckout\\'" "[/\\\\]\\.tox\\'" "[/\\\\]dist\\'" "[/\\\\]dist-newstyle\\'" "[/\\\\]\\.stack-work\\'" "[/\\\\]\\.bloop\\'" "[/\\\\]\\.metals\\'" "[/\\\\]target\\'" "[/\\\\]\\.ccls-cache\\'" "[/\\\\]\\.vscode\\'" "[/\\\\]\\.deps\\'" "[/\\\\]build-aux\\'" "[/\\\\]autom4te.cache\\'" "[/\\\\]\\.reference\\'" "[/\\\\]\\.lsp\\'" "[/\\\\]\\.clj-kondo\\'" "[/\\\\]\\.cpcache\\'" "[/\\\\]bin/Debug\\'" "[/\\\\]obj\\'" "[/\\\\]\\venv"))
- '(package-selected-packages
-   '(web-mode tagedit slim-mode scss-mode sass-mode pug-mode helm-css-scss haml-mode counsel-css company-web web-completion-data rjsx-mode emmet-mode company-quickhelp grip-mode github-search github-clone git-gutter-fringe+ fringe-helper git-gutter+ gist gh marshal logito pcache browse-at-remote yaml-mode yapfify stickyfunc-enhance sphinx-doc pytest pyenv-mode py-isort poetry pippel pipenv pyvenv pip-requirements nose lsp-python-ms lsp-pyright live-py-mode importmagic epc ctable concurrent deferred helm-pydoc helm-cscope xcscope cython-mode company-anaconda blacken anaconda-mode pythonic web-beautify tern prettier-js npm-mode nodejs-repl livid-mode skewer-mode js2-refactor yasnippet multiple-cursors js2-mode js-doc import-js grizzl impatient-mode simple-httpd helm-gtags ggtags dap-mode lsp-treemacs bui lsp-mode markdown-mode counsel-gtags counsel swiper ivy company add-node-modules-path org-rich-yank org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download org-cliplink org-brain htmlize helm-org-rifle gnuplot evil-org ws-butler writeroom-mode winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package undo-tree treemacs-projectile treemacs-persp treemacs-icons-dired treemacs-evil toc-org symon symbol-overlay string-inflection string-edit spaceline-all-the-icons restart-emacs request rainbow-delimiters popwin pcre2el password-generator paradox overseer org-superstar open-junk-file nameless multi-line macrostep lorem-ipsum link-hint indent-guide hybrid-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation helm-xref helm-themes helm-swoop helm-purpose helm-projectile helm-org helm-mode-manager helm-make helm-ls-git helm-flx helm-descbinds helm-ag google-translate golden-ratio font-lock+ flycheck-package flycheck-elsa flx-ido fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-easymotion evil-collection evil-cleverparens evil-args evil-anzu eval-sexp-fu emr elisp-slime-nav editorconfig dumb-jump drag-stuff dotenv-mode dired-quick-sort diminish devdocs define-word column-enforce-mode clean-aindent-mode centered-cursor-mode auto-highlight-symbol auto-compile aggressive-indent ace-link ace-jump-helm-line)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
-)
+; This function is disabled
+;
+; See user-config for location of custom.el file
+; where customized variables are stored
+(defun dotspacemacs/emacs-custom-settings ())
