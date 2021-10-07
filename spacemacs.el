@@ -574,9 +574,10 @@ before packages are loaded."
   )
 
   ;; Keep the cursor centered in buffers
-  (and
-   (require 'centered-cursor-mode)
-   (global-centered-cursor-mode +1))
+  (setq scroll-preserve-screen-position t
+        scroll-conservatively 0
+        maximum-scroll-margin 0.5
+        scroll-margin 99999)
 
   ;; auto-completion using company in all buffers
   (global-company-mode)
