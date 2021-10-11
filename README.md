@@ -24,3 +24,5 @@ npm install -g pyright
 pip install -r requirements.txt
 npm install -g package.json
 ```
+
+1. For Rust support: Install `rust-analyzer`
