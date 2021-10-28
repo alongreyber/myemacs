@@ -1,32 +1,64 @@
+# Overview
+
+This is my emacs editor configuration. It's very opinionated and set up for personal use.
+
 # Setup
 
-1. Install Emacs:
+I've tried to make the configuration as declarative as possible so that it's easy to install reliably.
+
+## Install Emacs
+
+I recently switched to GccEmacs, which compiles all Elisp to C ahead of time. There is an initial time required for compilation but I've noticed a performance improvement afterwards.
+
+### Mac OS
+
+This is easy on MacOS thanks to the emacs-plus package:
+
+```
+brew tap d12frosted/emacs-plus
+brew install emacs-plus@28 --with-native-comp
+```
+
+### Ubuntu
+
+TODO
+
+## Install Spacemacs
 
 ```
 git clone https://github.com/syl20bnr/spacemacs ~/.emacs.d
 ```
 
-1. Symlink spacemacs configuration from this repo:
+## Symlink spacemacs configuration from this repo
+
+This keeps your .spacemacs file in version control.
 
 ```
 ln ~/myemacs/spacemacs.el ~/.spacemacs
 ```
 
-1. Install language server:
+## Install other dependencies
 
-```
-npm install -g pyright
-```
+### Package Managers
 
-1. Set up github forge using [these instructions](https://magit.vc/manual/ghub/Getting-Started.html#Getting-Started)
-
-1. MacOS Only: Install [flycut](https://apps.apple.com/us/app/flycut-clipboard-manager/id442160987?mt=12)
-
-1. Install dependencies with 
+When possible, dependencies are packaged with package managers. To install these:
 
 ```
 pip install -r requirements.txt
 npm install -g package.json
 ```
 
-1. For Rust support: Install `rust-analyzer`
+### Magit/Forge
+
+Set up github forge using [these instructions](https://magit.vc/manual/ghub/Getting-Started.html#Getting-Started)
+
+### Flycut (MacOS only)
+
+Install flycut using [these instructions](https://apps.apple.com/us/app/flycut-clipboard-manager/id442160987?mt=12).
+
+### RustUp
+
+```
+rustup component add rust-src
+```
+
