@@ -2,3 +2,9 @@ keybind,description
 SPC D f f,Compare two files visually using Ediff
 SPC g s magit-ediff-compare, Compare a pull request using Ediff
 SPC u SPC 1, Close window number 1
+zm,Fold all functions
+zo,Open all functions
+SPC pj,Run project
+C-/, Fuzzy find in autocompletion (with autocomplete open)
+SPC is,Helm search snippets (think 'insert snippet')
+TAB, Expand under cursor

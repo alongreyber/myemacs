@@ -31,8 +31,10 @@ This function should only modify configuration layer settings."
    dotspacemacs-configuration-layer-path '()
 
    ;; List of configuration layers to load.
-   dotspacemacs-configuration-layers
-   '(csv
+   dotspacemacs-configuration-layers '(
+     ;;; Programming languages (major modes)
+     sql
+     csv
      (go :variables
          go-tab-width 4
          godoc-at-point-function 'godoc-gogetdoc
@@ -42,6 +44,8 @@ This function should only modify configuration layer settings."
            rust-backend 'lsp
            )
      (lsp :variables
+          ;; Keep home directory out of lsp session (learned this the hard way)
+          lsp-session-folders-blacklist (list (expand-file-name "~"))
           lsp-rust-server 'rust-analyzer)
      nginx
      html
@@ -50,7 +54,7 @@ This function should only modify configuration layer settings."
      (python :variables
              python-backend 'lsp
              python-lsp-server 'pyright
-             python-formatter 'yapf
+             python-formatter 'black
              python-test-runner 'pytest
              ;; Weird errors during pytest without this
              python-shell-completion-native-enable nil
@@ -68,6 +72,9 @@ This function should only modify configuration layer settings."
      (json :variables
            json-backend 'lsp)
      emacs-lisp
+     markdown
+
+     ;;; Other tools
      git
      (github :variables
              forge-topic-list-limit '(60 . -1)
@@ -80,37 +87,25 @@ This function should only modify configuration layer settings."
                      )
              )
      helm
-     markdown
-     multiple-cursors
-     org
      (shell :variables
             shell-default-shell 'vterm
             shell-default-height 30
             shell-default-position 'bottom)
-     ;; spell-checking
-     ;; syntax-checking
-     ;; version-control
      (auto-completion :variables
-                      auto-completion-enable-snippets-in-popup t
                       auto-completion-enable-help-tooltip t
                       auto-completion-idle-delay 0.0
+                      ;; Show in nice box instead of ugly box
+                      auto-completion-use-company-box 1
                       )
 
-     ; Use separate clipboards for emacs and system
      (xclipboard :variables
+                 ;; Use separate clipboards for emacs and system
                  select-enable-clipboard nil
                  xclipboard-enable-cliphist t)
 
      (treemacs :variables treemacs-use-filewatch-mode t)
-
-
      eaf
-
-     ; Enable evil bindings in calculator
-     (spacemacs-evil :variables
-                     spacemacs-evil-collection-allowed-list
-                     '(calc))
-     )
+    )
 
 
    ;; List of additional packages that will be installed without being wrapped
@@ -121,11 +116,7 @@ This function should only modify configuration layer settings."
    ;; `dotspacemacs/user-config'. To use a local version of a package, use the
    ;; `:location' property: '(your-package :location "~/path/to/your-package/")
    ;; Also include the dependencies as they will not be resolved automatically.
-   dotspacemacs-additional-packages
-   '(
-     py-autopep8
-     github-review
-    )
+   dotspacemacs-additional-packages '()
 
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
@@ -570,7 +561,7 @@ configuration.
 It is mostly for variables that should be set before packages are loaded.
 If you are unsure, try setting them in `dotspacemacs/user-config' first."
 
-  ; Use a separate file for custom adjustments
+  ;; Use a separate file for custom adjustments
   (customize-set-variable
    'custom-file (file-truename (concat user-emacs-directory "custom.el")) "Separate custom file")
   (unless (file-exists-p custom-file)
@@ -592,75 +583,22 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
+  ;; Keybinding to run projectile project with SPC-pj
   (spacemacs/set-leader-keys "pj" 'projectile-run-project)
 
-  (defun air-org-skip-subtree-if-priority (priority)
-    "Helper function
-     Skip an agenda subtree if it has a priority of PRIORITY.
-     PRIORITY may be one of the characters ?A, ?B, or ?C."
-    (let ((subtree-end (save-excursion (org-end-of-subtree t)))
-          (pri-value (* 1000 (- org-lowest-priority priority)))
-          (pri-current (org-get-priority (thing-at-point 'line t))))
-      (if (= pri-value pri-current)
-          subtree-end
-        nil)))
-
-  ;; Configure org mode
-  (with-eval-after-load 'org
-
-    (setq org-todo-keywords '((sequence "TODO(t)" "STARTED(s)" "WAITING(w)" "|" "DONE(d)")))
-    (setq org-agenda-files '("~/org/"))
-    (setq org-clock-persist t)
-    (org-clock-persistence-insinuate)
-    ;; Custom agenda view that separates
-    ;; high priority tasks from the rest
-    (setq org-agenda-custom-commands
-          '(("c" "Simple agenda view"
-             ((tags "PRIORITY=\"A\""
-                    ((org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
-                     (org-agenda-overriding-header "High-priority unfinished tasks:")))
-              (agenda "")
-              (alltodo ""
-                       ((org-agenda-skip-function
-                         '(or (air-org-skip-subtree-if-priority ?A)
-                              (org-agenda-skip-if nil '(scheduled deadline))))))))))
-  )
-
   ;; Keep the cursor centered in buffers
-  (setq scroll-preserve-screen-position t
-        scroll-conservatively 0
-        maximum-scroll-margin 0.5
-        scroll-margin 99999)
+  (and (require 'centered-cursor-mode)
+       (global-centered-cursor-mode +1))
 
-  ;; auto-completion using company in all buffers
-  (global-company-mode)
+  ;; Format on save in python layer manually
+  ;; because the variable isn't working
+  (add-hook 'python-mode-hook 'spacemacs/python-format-buffer)
 
-  ;; Org mode on startup
-  (org-agenda nil "c")
-  (switch-to-buffer "*Org Agenda*")
-  (spacemacs/toggle-maximize-buffer)
 
-  ;; Autopep8 on save
-  (require 'py-autopep8)
-  (add-hook 'python-mode-hook 'py-autopep8-enable-on-save)
-  (setq py-autopep8-options '("--ignore=E402"))
+  ;; Open magit in a popup window on the right
+  (add-to-list 'popwin:special-display-config
+               '(magit-status-mode :dedicated t :position right :stick t :width 60))
 
-  ;; Add support for typing emojis
-  (set-language-environment "UTF-8")
-  (set-default-coding-systems 'utf-8)
-  ;; font for all unicode characters
-  (set-fontset-font t 'unicode "Apple Color Emoji" nil 'prepend)
-  (define-abbrev-table 'global-abbrev-table '(
-                                              (":smiley_face:" "🙂")
-                                              (":sad_face:" "🙁")
-                                              (":box:" "☐")
-                                              (":box_check:" "☑")
-                                              (":box_cross:" "☒")
-                                              ))
-  (abbrev-mode 1) ; turn on abbrev mode
-
-  ; Customize calculator
-  (setq calc-context-sensitive-enter 1)
   )
 
 ; This function is disabled

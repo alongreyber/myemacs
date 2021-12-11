@@ -48,6 +48,14 @@ pip install -r requirements.txt
 npm install -g package.json
 ```
 
+### Golang Language Server
+
+#### Mac OS:
+
+```
+brew install gopls
+```
+
 ### Magit/Forge
 
 Set up github forge using [these instructions](https://magit.vc/manual/ghub/Getting-Started.html#Getting-Started)
@@ -62,3 +70,6 @@ Install flycut using [these instructions](https://apps.apple.com/us/app/flycut-c
 rustup component add rust-src
 ```
 
+### GDB Codesign (MacOS only)
+
+If you would like to use GDB for debugging you will need to codesign it. This is because MacOS doesn't allow processes to access other processes for security reasons. Instructions are available [here](https://sourceware.org/gdb/wiki/PermissionsDarwin).
