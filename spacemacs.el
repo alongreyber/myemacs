@@ -597,7 +597,28 @@ before packages are loaded."
 
   ;; Open magit in a popup window on the right
   (add-to-list 'popwin:special-display-config
-               '(magit-status-mode :dedicated t :position right :stick t :width 60))
+    '(magit-status-mode :dedicated t :position right :stick t :width 60 :noselect t))
+
+  ;; Search google for word under cursor
+  (defun my-search-or-browse ()
+    "If selected region, or thing at point, is a url, go there. Otherwise,
+use region/thing as a keyword for a google search."
+    (interactive)
+    (let ((target
+           (if (use-region-p)
+               (buffer-substring (region-beginning) (region-end))
+             (thing-at-point 'symbol))))
+      (browse-url (concat "http://www.google.com/search?q="
+                          (url-hexify-string target)))
+      )
+    )
+
+  (spacemacs/declare-prefix "o" "custom")
+  (spacemacs/set-leader-keys "os" 'my-search-or-browse)
+  (setq browse-url-browser-function 'browse-url-firefox
+        browse-url-firefox-program "/Applications/Firefox.app/Contents/MacOS/firefox-bin"
+        browse-url-new-window-flag  t
+        browse-url-firefox-new-window-is-tab t)
 
   )
 
