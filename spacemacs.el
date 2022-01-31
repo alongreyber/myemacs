@@ -642,14 +642,11 @@ before packages are loaded."
     (setq change-desc (read-string "Describe change: "))
     (setq change-desc-slug (sluggify change-desc))
 
-    (magit-branch-and-checkout change-desc-slug (magit-get-current-branch))
+    (setq cmd (format "git checkout -b %s && git commit -m \"%s\" &&git push --set-upstream origin %s " change-desc-slug change-desc change-desc-slug))
 
-    (magit-call-git "commit" "-m" change-desc)
+    (magit-call-process "bash" "-c" cmd)
+
     (magit-refresh)
-
-    (magit-push-current-to-upstream)
-
-    (forge-create-pullreq (magit-get-current-branch) (magit-get-upstream-branch))
 
   )
   (spacemacs/set-leader-keys "op" 'open-pull-request)
