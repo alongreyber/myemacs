@@ -58,10 +58,8 @@ This function should only modify configuration layer settings."
              python-test-runner 'pytest
              ;; Weird errors during pytest without this
              python-shell-completion-native-enable nil
-             ;; Disable showing output from pytest to clean up the shell
-             pytest-cmd-flags ""
              ;; Disable pyright type checking
-             lsp-pyright-typechecking-mode "off"
+             ;; lsp-pyright-typechecking-mode "off"
              )
      (javascript :variables
              javascript-backend 'lsp
@@ -105,6 +103,9 @@ This function should only modify configuration layer settings."
 
      (treemacs :variables treemacs-use-filewatch-mode t)
      eaf
+
+     ;; Themes
+     themes-megapack
     )
 
 
@@ -269,7 +270,7 @@ It should only modify the values of Spacemacs settings."
    ;; List of themes, the first of the list is loaded when spacemacs starts.
    ;; Press `SPC T n' to cycle to the next theme in the list (works great
    ;; with 2 themes variants, one dark and one light)
-   dotspacemacs-themes '(spacemacs-dark
+   dotspacemacs-themes '(spolsky
                          spacemacs-light)
 
    ;; Set the theme for the Spaceline. Supported themes are `spacemacs',
@@ -288,7 +289,7 @@ It should only modify the values of Spacemacs settings."
    ;; Default font or prioritized list of fonts. The `:size' can be specified as
    ;; a non-negative integer (pixel size), or a floating-point (point size).
    ;; Point size is recommended, because it's device independent. (default 10.0)
-   dotspacemacs-default-font '("Menlo"
+   dotspacemacs-default-font '("Jetbrains Mono"
                                :size 15.0
                                :weight normal
                                :width normal)
@@ -599,10 +600,13 @@ before packages are loaded."
   (add-to-list 'popwin:special-display-config
     '(magit-status-mode :dedicated t :position right :stick t :width 60 :noselect t))
 
+  ;; Open pytest in a popup window on the bottom
+  (add-to-list 'popwin:special-display-config
+               '(".*pytest.*" :regexp :dedicated t :position bottom :stick t :height 40))
+
   ;; Search google for word under cursor
   (defun my-search-or-browse ()
-    "If selected region, or thing at point, is a url, go there. Otherwise,
-use region/thing as a keyword for a google search."
+    "Use region/thing as a keyword for a google search"
     (interactive)
     (let ((target
            (if (use-region-p)
@@ -611,14 +615,44 @@ use region/thing as a keyword for a google search."
       (browse-url (concat "http://www.google.com/search?q="
                           (url-hexify-string target)))
       )
-    )
-
+  )
   (spacemacs/declare-prefix "o" "custom")
   (spacemacs/set-leader-keys "os" 'my-search-or-browse)
   (setq browse-url-browser-function 'browse-url-firefox
         browse-url-firefox-program "/Applications/Firefox.app/Contents/MacOS/firefox-bin"
         browse-url-new-window-flag  t
         browse-url-firefox-new-window-is-tab t)
+
+  ;; Use a different minor-mode for the compilation buffer so that we can
+  ;; get progress bars and such rendered correctly
+  (add-hook 'term-mode-hook 'compilation-shell-minor-mode)
+
+  (defun sluggify (str)
+    (replace-regexp-in-string
+     "[^a-z0-9-]" ""
+     (mapconcat 'identity
+                (remove-if-not 'identity
+                               (split-string (downcase str) " ") ) "-")
+     )
+  )
+
+  ;; Add shortcut to quickly open a PR with a change
+  (defun open-pull-request ()
+    (interactive)
+    (setq change-desc (read-string "Describe change: "))
+    (setq change-desc-slug (sluggify change-desc))
+
+    (magit-branch-and-checkout change-desc-slug (magit-get-current-branch))
+
+    (magit-call-git "commit" "-m" change-desc)
+    (magit-refresh)
+
+    (magit-push-current-to-upstream)
+
+    (forge-create-pullreq (magit-get-current-branch) (magit-get-upstream-branch))
+
+  )
+  (spacemacs/set-leader-keys "op" 'open-pull-request)
 
   )
 
