@@ -8,3 +8,4 @@ SPC pj,Run project
 C-/, Fuzzy find in autocompletion (with autocomplete open)
 SPC is,Helm search snippets (think 'insert snippet')
 TAB, Expand under cursor
+SPC j j, Use tree based navigation to jump to any character on the screen

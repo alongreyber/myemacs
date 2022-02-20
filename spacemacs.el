@@ -31,7 +31,7 @@ This function should only modify configuration layer settings."
    dotspacemacs-configuration-layer-path '()
 
    ;; List of configuration layers to load.
-   dotspacemacs-configuration-layers '(
+   dotspacemacs-configuration-layers '(restclient
      ;;; Programming languages (major modes)
      sql
      csv
@@ -642,14 +642,34 @@ before packages are loaded."
     (setq change-desc (read-string "Describe change: "))
     (setq change-desc-slug (sluggify change-desc))
 
-    (setq cmd (format "git checkout -b %s && git commit -m \"%s\" &&git push --set-upstream origin %s " change-desc-slug change-desc change-desc-slug))
+    (setq cmds (list
+      (format "git checkout -b %s" change-desc-slug)
+      (format "git commit -m \"%s\"" change-desc)
+      (format "git push --set-upstream origin %s" change-desc-slug)
+      (format "gh pr create --title \"%s\" --body \"\""change-desc-slug)
+    ))
 
-    (magit-call-process "bash" "-c" cmd)
+    (magit-call-process "bash" "-c"
+          (mapconcat 'identity cmds " && ")
+    )
+
+    (message "Created Pull Request")
 
     (magit-refresh)
 
   )
   (spacemacs/set-leader-keys "op" 'open-pull-request)
+
+  ;; Add shortcut to open file with jless
+  (defun open-with-jless ()
+    (interactive)
+    (setq file-name (read-file-name "JSON File: "))
+    (comint-send-string
+      (get-buffer-process (shell))
+      (format "jless %s\n" file-name)
+    )
+  )
+  (spacemacs/set-leader-keys "oj" 'open-with-jless)
 
   )
 
