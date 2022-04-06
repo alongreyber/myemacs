@@ -31,7 +31,8 @@ This function should only modify configuration layer settings."
    dotspacemacs-configuration-layer-path '()
 
    ;; List of configuration layers to load.
-   dotspacemacs-configuration-layers '(restclient
+   dotspacemacs-configuration-layers '(
+                                       restclient
      ;;; Programming languages (major modes)
      sql
      csv
@@ -43,6 +44,8 @@ This function should only modify configuration layer settings."
      (rust :variables
            rust-backend 'lsp
            )
+     (typescript :variables
+           typescript-backend 'lsp)
      (lsp :variables
           ;; Keep home directory out of lsp session (learned this the hard way)
           lsp-session-folders-blacklist (list (expand-file-name "~"))
@@ -670,6 +673,11 @@ before packages are loaded."
     )
   )
   (spacemacs/set-leader-keys "oj" 'open-with-jless)
+
+  ;; Remove items from menu-bar on MacOS
+  (setq yas-use-menu nil)
+  (define-key global-map [menu-bar options showhide showhide-tool-bar] nil)
+
 
   )
 

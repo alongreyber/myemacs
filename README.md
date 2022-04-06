@@ -70,6 +70,14 @@ Install flycut using [these instructions](https://apps.apple.com/us/app/flycut-c
 rustup component add rust-src
 ```
 
+### Ripgrep
+
+Install ripgrep for faster search:
+
+```
+brew install ripgrep
+```
+
 ### GDB Codesign (MacOS only)
 
 If you would like to use GDB for debugging you will need to codesign it. This is because MacOS doesn't allow processes to access other processes for security reasons. Instructions are available [here](https://sourceware.org/gdb/wiki/PermissionsDarwin).
