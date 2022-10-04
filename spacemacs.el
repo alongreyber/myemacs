@@ -34,7 +34,7 @@ This function should only modify configuration layer settings."
    dotspacemacs-configuration-layers '(
                                        restclient
      ;;; Programming languages (major modes)
-     sql
+     ;; sql
      csv
      (go :variables
          go-tab-width 4
@@ -74,6 +74,7 @@ This function should only modify configuration layer settings."
            json-backend 'lsp)
      emacs-lisp
      markdown
+     ipython-notebook
 
      ;;; Other tools
      git
@@ -120,7 +121,9 @@ This function should only modify configuration layer settings."
    ;; `dotspacemacs/user-config'. To use a local version of a package, use the
    ;; `:location' property: '(your-package :location "~/path/to/your-package/")
    ;; Also include the dependencies as they will not be resolved automatically.
-   dotspacemacs-additional-packages '()
+   dotspacemacs-additional-packages '(
+                                      nvm
+                                      )
 
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
@@ -678,8 +681,48 @@ before packages are loaded."
   (setq yas-use-menu nil)
   (define-key global-map [menu-bar options showhide showhide-tool-bar] nil)
 
+  ;; Auto activate venv
+  (defun pyvenv-autoload ()
+    "Automatically activates pyvenv version if .venv directory exists."
+    (f-traverse-upwards
+     (lambda (path)
+       (let ((venv-path (f-expand ".venv" path)))
+         (if (f-exists? venv-path)
+             (progn
+               (pyvenv-workon venv-path))
+           t)))))
+  (add-hook 'python-mode-hook 'pyvenv-autoload)
 
+  ;; Auto activate nvm
+  (add-hook 'typescript-mode-hook 'nvm-use-for-buffer)
+  (add-hook 'javascript-mode-hook 'nvm-use-for-buffer)
+
+  ;; pyright is written in node, so we need this on the python mode
+  (add-hook 'python-mode-hook 'nvm-use-for-buffer)
+
+  ;; EIN default command to run in docker
+  ;; (setq ein:jupyter-server-command "docker run -p 8888:8888 jupyter/datascience-notebook start-notebook.sh --ip='*' --NotebookApp.token='' --NotebookApp.password=''")
+  (setq ein:jupyter-server-command "~/.start-py-jupyter.sh")
+  ;;(setq ein:jupyter-use-containers t)
+  ;;(setq ein:jupyter-docker-additional-switches "-p 8888:8888")
+  ;; (setq ein:jupyter-server-args '("--ip='*'" "--NotebookApp.token=''" "--NotebookApp.password=''"))
+  ;; EIN default connection string
+  (setq ein:urls '("http://127.0.0.1:8888"))
+  ;; (setq ein:jupyter-server)
+
+  ;; Show plots inline for ein (jupyter notebook editor)
+  (setq ein:output-area-inlined-images t)
+
+  ;; JS2 is a syntax highlighter, this allows missing semicolons
+  (setq js2-strict-missing-semi-warning nil)
+
+  ;; Editorconfig is a cross-platform way to configure editors per-project
+  (use-package editorconfig
+    :ensure t
+    :config
+    (editorconfig-mode 1))
   )
+
 
 ; This function is disabled
 ;
