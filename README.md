@@ -78,6 +78,13 @@ Install ripgrep for faster search:
 brew install ripgrep
 ```
 
+### Download fonts for icons
+
+Run command in Spacemacs:
+```
+all-the-icons-install-fonts
+```
+
 ### GDB Codesign (MacOS only)
 
 If you would like to use GDB for debugging you will need to codesign it. This is because MacOS doesn't allow processes to access other processes for security reasons. Instructions are available [here](https://sourceware.org/gdb/wiki/PermissionsDarwin).

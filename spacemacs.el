@@ -31,7 +31,7 @@ This function should only modify configuration layer settings."
    dotspacemacs-configuration-layer-path '()
 
    ;; List of configuration layers to load.
-   dotspacemacs-configuration-layers '(
+   dotspacemacs-configuration-layers '(sql
                                        restclient
      ;;; Programming languages (major modes)
      ;; sql
@@ -64,6 +64,7 @@ This function should only modify configuration layer settings."
              ;; Disable pyright type checking
              ;; lsp-pyright-typechecking-mode "off"
              )
+     (julia :variables julia-backend 'lsp)
      (javascript :variables
              javascript-backend 'lsp
              )
@@ -77,8 +78,7 @@ This function should only modify configuration layer settings."
      ipython-notebook
 
      ;;; Other tools
-     git
-     (github :variables
+     (git :variables
              forge-topic-list-limit '(60 . -1)
              forge-topic-list-columns
                    '(("#" 4 t (:right-align t) number nil)
@@ -123,6 +123,7 @@ This function should only modify configuration layer settings."
    ;; Also include the dependencies as they will not be resolved automatically.
    dotspacemacs-additional-packages '(
                                       nvm
+                                      prettier-js
                                       )
 
    ;; A list of packages that cannot be updated.
@@ -721,8 +722,14 @@ before packages are loaded."
     :ensure t
     :config
     (editorconfig-mode 1))
-  )
 
+  ;; Automatic prettier formatting in JS2 buffers
+  (add-hook 'js2-mode-hook 'prettier-js-mode)
+  (add-hook 'typescript-mode-hook 'prettier-js-mode)
+  (add-hook 'web-mode-hook 'prettier-js-mode)
+  (add-hook 'typescript-tsx-mode-hook 'prettier-js-mode)
+
+)
 
 ; This function is disabled
 ;
