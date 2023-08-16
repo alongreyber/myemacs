@@ -85,6 +85,17 @@ Run command in Spacemacs:
 all-the-icons-install-fonts
 ```
 
+### Build VTerm
+
+Install dependencies:
+```
+brew install cmake libtools
+```
+Build command (in Spacemacs):
+```
+vterm
+```
+
 ### GDB Codesign (MacOS only)
 
 If you would like to use GDB for debugging you will need to codesign it. This is because MacOS doesn't allow processes to access other processes for security reasons. Instructions are available [here](https://sourceware.org/gdb/wiki/PermissionsDarwin).

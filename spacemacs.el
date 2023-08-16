@@ -31,7 +31,8 @@ This function should only modify configuration layer settings."
    dotspacemacs-configuration-layer-path '()
 
    ;; List of configuration layers to load.
-   dotspacemacs-configuration-layers '(sql
+   dotspacemacs-configuration-layers '(ruby
+                                       sql
                                        restclient
      ;;; Programming languages (major modes)
      ;; sql
@@ -105,7 +106,10 @@ This function should only modify configuration layer settings."
                  select-enable-clipboard nil
                  xclipboard-enable-cliphist t)
 
-     (treemacs :variables treemacs-use-filewatch-mode t)
+     (treemacs :variables
+               treemacs-use-filewatch-mode t
+               treemacs-use-follow-mode nil
+               )
      eaf
 
      ;; Themes
@@ -124,6 +128,11 @@ This function should only modify configuration layer settings."
    dotspacemacs-additional-packages '(
                                       nvm
                                       prettier-js
+                                      (copilot :location (recipe
+                                                            :fetcher github
+                                                            :repo "zerolfx/copilot.el"
+                                                            :files ("*.el" "dist")))
+                                      sqlite3
                                       )
 
    ;; A list of packages that cannot be updated.
@@ -625,14 +634,17 @@ before packages are loaded."
   )
   (spacemacs/declare-prefix "o" "custom")
   (spacemacs/set-leader-keys "os" 'my-search-or-browse)
-  (setq browse-url-browser-function 'browse-url-firefox
-        browse-url-firefox-program "/Applications/Firefox.app/Contents/MacOS/firefox-bin"
+  (setq browse-url-browser-function 'browse-url-default-browser
         browse-url-new-window-flag  t
         browse-url-firefox-new-window-is-tab t)
 
   ;; Use a different minor-mode for the compilation buffer so that we can
   ;; get progress bars and such rendered correctly
   (add-hook 'term-mode-hook 'compilation-shell-minor-mode)
+
+  ;; Set max terminal size to unlimited
+  (setq vterm-max-scrollback 100000)
+
 
   (defun sluggify (str)
     (replace-regexp-in-string
@@ -682,18 +694,6 @@ before packages are loaded."
   (setq yas-use-menu nil)
   (define-key global-map [menu-bar options showhide showhide-tool-bar] nil)
 
-  ;; Auto activate venv
-  (defun pyvenv-autoload ()
-    "Automatically activates pyvenv version if .venv directory exists."
-    (f-traverse-upwards
-     (lambda (path)
-       (let ((venv-path (f-expand ".venv" path)))
-         (if (f-exists? venv-path)
-             (progn
-               (pyvenv-workon venv-path))
-           t)))))
-  (add-hook 'python-mode-hook 'pyvenv-autoload)
-
   ;; Auto activate nvm
   (add-hook 'typescript-mode-hook 'nvm-use-for-buffer)
   (add-hook 'javascript-mode-hook 'nvm-use-for-buffer)
@@ -729,6 +729,28 @@ before packages are loaded."
   (add-hook 'web-mode-hook 'prettier-js-mode)
   (add-hook 'typescript-tsx-mode-hook 'prettier-js-mode)
 
+  (with-eval-after-load 'company
+    ;; disable inline previews
+    (delq 'company-preview-if-just-one-frontend company-frontends))
+  
+  (with-eval-after-load 'copilot
+    (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
+    (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)
+    (define-key copilot-completion-map (kbd "C-TAB") 'copilot-accept-completion-by-word)
+    (define-key copilot-completion-map (kbd "C-<tab>") 'copilot-accept-completion-by-word))
+
+  (add-hook 'prog-mode-hook 'copilot-mode)
+
+  ;; Customize avy actions
+  (defun my-avy-action-copy-and-yank (pt)
+    "Copy and yank sexp starting on PT."
+    (avy-action-copy pt)
+    (yank))
+  (setq avy-dispatch-alist '((?c . avy-action-copy)
+                             (?k . avy-action-kill-move)
+                             (?K . avy-action-kill-stay)
+                             (?m . avy-action-mark)
+                             (?p . my-avy-action-copy-and-yank)))
 )
 
 ; This function is disabled
