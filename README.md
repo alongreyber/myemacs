@@ -16,7 +16,7 @@ This is easy on MacOS thanks to the emacs-plus package:
 
 ```
 brew tap d12frosted/emacs-plus
-brew install emacs-plus@28 --with-native-comp
+brew install emacs-plus@30 --with-native-comp --with-poll
 ```
 
 ### Ubuntu
