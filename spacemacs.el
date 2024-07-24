@@ -32,7 +32,7 @@ This function should only modify configuration layer settings."
 
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(
+   '(shell-scripts
      ;;; Programming languages (major modes)
      ruby
      sql
@@ -47,24 +47,32 @@ This function should only modify configuration layer settings."
            rust-backend 'lsp
            )
      (typescript :variables
-           typescript-backend 'lsp)
+           typescript-backend 'lsp
+           typescript-fmt-tool 'prettier
+           typescript-fmt-on-save t
+           )
      (lsp :variables
           ;; Keep home directory out of lsp session (learned this the hard way)
           lsp-session-folders-blacklist (list (expand-file-name "~"))
-          lsp-rust-server 'rust-analyzer)
+          lsp-rust-server 'rust-analyzer
+          ;; Enable docs on cursor hover
+          lsp-ui-doc-show-with-cursor t
+          )
      nginx
-     html
+     (html
+      :variables html-enable-lsp t
+      )
      react
      yaml
      (python :variables
              python-backend 'lsp
              python-lsp-server 'pyright
              python-formatter 'black
+             python-poetry-activate t
              python-test-runner 'pytest
              ;; Weird errors during pytest without this
              python-shell-completion-native-enable nil
-             ;; Disable pyright type checking
-             ;; lsp-pyright-typechecking-mode "off"
+             python-format-on-save t
              )
      (julia :variables julia-backend 'lsp)
      (javascript :variables
@@ -93,6 +101,7 @@ This function should only modify configuration layer settings."
      helm
      (shell :variables
             shell-default-shell 'vterm
+            shell-default-term-shell "/opt/homebrew/bin/fish"
             shell-default-height 30
             shell-default-position 'bottom)
      (auto-completion :variables
@@ -131,9 +140,12 @@ This function should only modify configuration layer settings."
                                       prettier-js
                                       (copilot :location (recipe
                                                             :fetcher github
-                                                            :repo "zerolfx/copilot.el"
-                                                            :files ("*.el" "dist")))
+                                                            :repo "copilot-emacs/copilot.el"
+                                                            :files ("*.el")))
                                       sqlite3
+                                      with-venv
+                                      string-inflection
+                                      gptel
                                       )
 
    ;; A list of packages that cannot be updated.
@@ -657,10 +669,37 @@ before packages are loaded."
   ;; because the variable isn't working
   (add-hook 'python-mode-hook 'spacemacs/python-format-buffer)
 
-
   ;; Open magit in a popup window on the right
   (add-to-list 'popwin:special-display-config
-    '(magit-status-mode :dedicated t :position right :stick t :width 60 :noselect t))
+               '(magit-status-mode :dedicated t :position right :stick t :width 60 :noselect t))
+
+  ;; Show list of requested PR reviews in magit status buffer
+  (with-eval-after-load 'magit
+    (add-to-list 'magit-status-sections-hook
+                 'forge-insert-authored-pullreqs  t)
+    (add-to-list 'magit-status-sections-hook
+                 'forge-insert-requested-reviews t)
+  )
+
+  ;; Function to open current line in Github
+  ;; Copied from https://github.com/magit/forge/issues/91
+  (defun btv-forge-browse-buffer-file ()
+    (interactive)
+    (browse-url
+     (let
+         ((rev (magit-rev-abbrev "HEAD"))
+          (repo (forge-get-repository 'stub))
+          (file (magit-file-relative-name buffer-file-name))
+          (highlight
+           (if
+               (use-region-p)
+               (let ((l1 (line-number-at-pos (region-beginning)))
+                     (l2 (line-number-at-pos (- (region-end) 1))))
+                 (format "#L%d-L%d" l1 l2))
+             ""
+             )))
+       (forge--format repo "https://%h/%o/%n/blob/%r/%f%L"
+                      `((?r . ,rev) (?f . ,file) (?L . ,highlight))))))
 
   ;; Open pytest in a popup window on the bottom
   (add-to-list 'popwin:special-display-config
@@ -778,7 +817,7 @@ before packages are loaded."
   (with-eval-after-load 'company
     ;; disable inline previews
     (delq 'company-preview-if-just-one-frontend company-frontends))
-  
+
   (with-eval-after-load 'copilot
     (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
     (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)
@@ -797,6 +836,15 @@ before packages are loaded."
                              (?K . avy-action-kill-stay)
                              (?m . avy-action-mark)
                              (?p . my-avy-action-copy-and-yank)))
+
+  (with-eval-after-load 'dap-mode
+          (setq dap-python-debugger 'debugpy)
+          ;; Feed the path to our venv to dap-mode
+          (defun dap-python--pyenv-executable-find (command)
+            (with-venv (executable-find command)))
+          )
+
+  (require 'gptel)
 )
 
 ; This function is disabled
