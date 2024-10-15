@@ -146,6 +146,7 @@ This function should only modify configuration layer settings."
                                       with-venv
                                       string-inflection
                                       gptel
+                                      gcmh
                                       )
 
    ;; A list of packages that cannot be updated.
@@ -811,7 +812,6 @@ before packages are loaded."
   ;; Automatic prettier formatting in JS2 buffers
   (add-hook 'js2-mode-hook 'prettier-js-mode)
   (add-hook 'typescript-mode-hook 'prettier-js-mode)
-  (add-hook 'web-mode-hook 'prettier-js-mode)
   (add-hook 'typescript-tsx-mode-hook 'prettier-js-mode)
 
   (with-eval-after-load 'company
@@ -845,6 +845,24 @@ before packages are loaded."
           )
 
   (require 'gptel)
+
+  ;; Set high GC limits for startup
+  (setq gc-cons-threshold (* 256 1000 1000)
+        gc-cons-percentage 0.8)
+  ;; Garbage collection while idle
+  (use-package gcmh
+    :config
+    ;; (setopt garbage-collection-messages t)
+    (setopt gcmh-high-cons-threshold (* 256 1000 1000))
+    (setopt gcmh-low-cons-threshold (* 16 1000 1000))
+    (setopt gcmh-idle-delay 3)
+    ;; (setopt gcmh-verbose t)
+    (setopt gc-cons-percentage 0.2)
+    (add-hook 'elpaca-after-init-hook #'gcmh-mode))
+
+  ;; More performance tuning
+  (setq read-process-output-max (* 64 1024 1024))
+  (setq process-adaptive-read-buffering nil)
 )
 
 ; This function is disabled
