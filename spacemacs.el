@@ -120,7 +120,6 @@ This function should only modify configuration layer settings."
                treemacs-use-filewatch-mode t
                treemacs-use-follow-mode nil
                )
-     eaf
 
      ;; Themes
      themes-megapack
@@ -659,6 +658,9 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
 
+  ;; Declare custom prefix for all custom functions
+  (spacemacs/declare-prefix "o" "custom")
+
   ;; Keybinding to run projectile project with SPC-pj
   (spacemacs/set-leader-keys "pj" 'projectile-run-project)
 
@@ -702,6 +704,8 @@ before packages are loaded."
        (forge--format repo "https://%h/%o/%n/blob/%r/%f%L"
                       `((?r . ,rev) (?f . ,file) (?L . ,highlight))))))
 
+  (spacemacs/set-leader-keys "og" 'btv-forge-browse-buffer-file)
+
   ;; Open pytest in a popup window on the bottom
   (add-to-list 'popwin:special-display-config
                '(".*pytest.*" :regexp :dedicated t :position bottom :stick t :height 40))
@@ -718,7 +722,6 @@ before packages are loaded."
                           (url-hexify-string target)))
       )
   )
-  (spacemacs/declare-prefix "o" "custom")
   (spacemacs/set-leader-keys "os" 'my-search-or-browse)
   (setq browse-url-browser-function 'browse-url-default-browser
         browse-url-new-window-flag  t
@@ -783,7 +786,6 @@ before packages are loaded."
   ;; Auto activate nvm
   (add-hook 'typescript-mode-hook 'nvm-use-for-buffer)
   (add-hook 'javascript-mode-hook 'nvm-use-for-buffer)
-
   ;; pyright is written in node, so we need this on the python mode
   (add-hook 'python-mode-hook 'nvm-use-for-buffer)
 
