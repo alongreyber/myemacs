@@ -47,10 +47,10 @@ This function should only modify configuration layer settings."
            rust-backend 'lsp
            )
      (typescript :variables
-           typescript-backend 'lsp
-           typescript-fmt-tool 'prettier
-           typescript-fmt-on-save t
-           )
+                 typescript-backend 'lsp
+                 typescript-fmt-tool 'prettier
+                 typescript-fmt-on-save t
+                 )
      (lsp :variables
           ;; Keep home directory out of lsp session (learned this the hard way)
           lsp-session-folders-blacklist (list (expand-file-name "~"))
@@ -76,8 +76,8 @@ This function should only modify configuration layer settings."
              )
      (julia :variables julia-backend 'lsp)
      (javascript :variables
-             javascript-backend 'lsp
-             )
+                 javascript-backend 'lsp
+                 )
      (vue :variables
           vue-backend 'lsp
           )
@@ -89,19 +89,19 @@ This function should only modify configuration layer settings."
 
      ;;; Other tools
      (git :variables
-             forge-topic-list-limit '(60 . -1)
-             forge-topic-list-columns
-                   '(("#" 4 t (:right-align t) number nil)
-                     ("Title" 35 t nil title  nil)
-                     ("Milestone" 9 t nil milestone nil)
-                     ("State" 6 t nil state nil)
-                     ("Updated" 10 t nill updated nil)
-                     )
-             )
+          forge-topic-list-limit '(60 . -1)
+          forge-topic-list-columns
+          '(("#" 4 t (:right-align t) number nil)
+            ("Title" 35 t nil title  nil)
+            ("Milestone" 9 t nil milestone nil)
+            ("State" 6 t nil state nil)
+            ("Updated" 10 t nill updated nil)
+            )
+          )
      helm
      (shell :variables
             shell-default-shell 'vterm
-            shell-default-term-shell "/opt/homebrew/bin/fish"
+            shell-default-term-shell "/bin/zsh"
             shell-default-height 30
             shell-default-position 'bottom)
      (auto-completion :variables
@@ -123,6 +123,7 @@ This function should only modify configuration layer settings."
 
      ;; Themes
      themes-megapack
+     org
      )
 
 
@@ -135,17 +136,21 @@ This function should only modify configuration layer settings."
    ;; `:location' property: '(your-package :location "~/path/to/your-package/")
    ;; Also include the dependencies as they will not be resolved automatically.
    dotspacemacs-additional-packages '(
+                                      exec-path-from-shell
                                       nvm
                                       prettier-js
                                       (copilot :location (recipe
-                                                            :fetcher github
-                                                            :repo "copilot-emacs/copilot.el"
-                                                            :files ("*.el")))
+                                                          :fetcher github
+                                                          :repo "copilot-emacs/copilot.el"
+                                                          :files ("*.el")))
                                       sqlite3
                                       with-venv
                                       string-inflection
                                       gptel
                                       gcmh
+                                      (aider :location (recipe
+                                                        :fetcher github
+                                                        :repo "tninja/aider"))
                                       )
 
    ;; A list of packages that cannot be updated.
@@ -625,7 +630,7 @@ default it calls `spacemacs/load-spacemacs-env' which loads the environment
 variables declared in `~/.spacemacs.env' or `~/.spacemacs.d/.spacemacs.env'.
 See the header of this file for more information."
   (spacemacs/load-spacemacs-env)
-)
+  )
 
 (defun dotspacemacs/user-init ()
   "Initialization for user code:
@@ -640,7 +645,7 @@ If you are unsure, try setting them in `dotspacemacs/user-config' first."
   (unless (file-exists-p custom-file)
     (write-region "" nil custom-file))
   (load custom-file)
-)
+  )
 
 
 (defun dotspacemacs/user-load ()
@@ -648,7 +653,7 @@ If you are unsure, try setting them in `dotspacemacs/user-config' first."
 This function is called only while dumping Spacemacs configuration. You can
 `require' or `load' the libraries of your choice that will be included in the
 dump."
-)
+  )
 
 
 (defun dotspacemacs/user-config ()
@@ -657,6 +662,20 @@ This function is called at the very end of Spacemacs startup, after layer
 configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
+
+  (setq org-capture-templates
+        '(
+          ("n" "Note"
+           entry (file+headline "~/org/notes.org" "Notes")
+           "** %?"
+           :empty-lines 0)
+          ))
+
+  ;; Load path from shell
+  (use-package exec-path-from-shell
+    :ensure t
+    :config
+    (exec-path-from-shell-initialize))
 
   ;; Declare custom prefix for all custom functions
   (spacemacs/declare-prefix "o" "custom")
@@ -675,14 +694,6 @@ before packages are loaded."
   ;; Open magit in a popup window on the right
   (add-to-list 'popwin:special-display-config
                '(magit-status-mode :dedicated t :position right :stick t :width 60 :noselect t))
-
-  ;; Show list of requested PR reviews in magit status buffer
-  (with-eval-after-load 'magit
-    (add-to-list 'magit-status-sections-hook
-                 'forge-insert-authored-pullreqs  t)
-    (add-to-list 'magit-status-sections-hook
-                 'forge-insert-requested-reviews t)
-  )
 
   ;; Function to open current line in Github
   ;; Copied from https://github.com/magit/forge/issues/91
@@ -721,7 +732,7 @@ before packages are loaded."
       (browse-url (concat "http://www.google.com/search?q="
                           (url-hexify-string target)))
       )
-  )
+    )
   (spacemacs/set-leader-keys "os" 'my-search-or-browse)
   (setq browse-url-browser-function 'browse-url-default-browser
         browse-url-new-window-flag  t
@@ -742,7 +753,7 @@ before packages are loaded."
                 (remove-if-not 'identity
                                (split-string (downcase str) " ") ) "-")
      )
-  )
+    )
 
   ;; Add shortcut to quickly open a PR with a change
   (defun open-pull-request ()
@@ -751,21 +762,21 @@ before packages are loaded."
     (setq change-desc-slug (sluggify change-desc))
 
     (setq cmds (list
-      (format "git checkout -b %s" change-desc-slug)
-      (format "git commit -m \"%s\"" change-desc)
-      (format "git push --set-upstream origin %s" change-desc-slug)
-      (format "gh pr create --title \"%s\" --body \"\""change-desc-slug)
-    ))
+                (format "git checkout -b %s" change-desc-slug)
+                (format "git commit -m \"%s\"" change-desc)
+                (format "git push --set-upstream origin %s" change-desc-slug)
+                (format "gh pr create --title \"%s\" --body \"\""change-desc-slug)
+                ))
 
     (magit-call-process "bash" "-c"
-          (mapconcat 'identity cmds " && ")
-    )
+                        (mapconcat 'identity cmds " && ")
+                        )
 
     (message "Created Pull Request")
 
     (magit-refresh)
 
-  )
+    )
   (spacemacs/set-leader-keys "op" 'open-pull-request)
 
   ;; Add shortcut to open file with jless
@@ -773,10 +784,10 @@ before packages are loaded."
     (interactive)
     (setq file-name (read-file-name "JSON File: "))
     (comint-send-string
-      (get-buffer-process (shell))
-      (format "jless %s\n" file-name)
+     (get-buffer-process (shell))
+     (format "jless %s\n" file-name)
+     )
     )
-  )
   (spacemacs/set-leader-keys "oj" 'open-with-jless)
 
   ;; Remove items from menu-bar on MacOS
@@ -824,9 +835,13 @@ before packages are loaded."
     (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
     (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)
     (define-key copilot-completion-map (kbd "C-TAB") 'copilot-accept-completion-by-word)
-    (define-key copilot-completion-map (kbd "C-<tab>") 'copilot-accept-completion-by-word))
+    (define-key copilot-completion-map (kbd "C-<tab>") 'copilot-accept-completion-by-word)
+    )
 
   (add-hook 'prog-mode-hook 'copilot-mode)
+
+  ;; Magit order refs by creation date
+  (setq magit-list-refs-sortby "-creatordate")
 
   ;; Customize avy actions
   (defun my-avy-action-copy-and-yank (pt)
@@ -840,11 +855,11 @@ before packages are loaded."
                              (?p . my-avy-action-copy-and-yank)))
 
   (with-eval-after-load 'dap-mode
-          (setq dap-python-debugger 'debugpy)
-          ;; Feed the path to our venv to dap-mode
-          (defun dap-python--pyenv-executable-find (command)
-            (with-venv (executable-find command)))
-          )
+    (setq dap-python-debugger 'debugpy)
+    ;; Feed the path to our venv to dap-mode
+    (defun dap-python--pyenv-executable-find (command)
+      (with-venv (executable-find command)))
+    )
 
   (require 'gptel)
 
@@ -862,13 +877,21 @@ before packages are loaded."
     (setopt gc-cons-percentage 0.2)
     (add-hook 'elpaca-after-init-hook #'gcmh-mode))
 
+  ;; Aider is an AI tool
+  (use-package aider
+    :config
+    (setq aider-args `("--config" ,(expand-file-name "~/.aider.conf.yml")))
+    ;; Use claude-3-5-sonnet cause it is best in aider benchmark
+    ;; Use SPC o a to activate
+    (spacemacs/set-leader-keys "oa" 'aider-transient-menu))
+
   ;; More performance tuning
   (setq read-process-output-max (* 64 1024 1024))
   (setq process-adaptive-read-buffering nil)
-)
+  )
 
-; This function is disabled
-;
-; See user-config for location of custom.el file
-; where customized variables are stored
+                                        ; This function is disabled
+                                        ;
+                                        ; See user-config for location of custom.el file
+                                        ; where customized variables are stored
 (defun dotspacemacs/emacs-custom-settings ())
