@@ -148,9 +148,9 @@ This function should only modify configuration layer settings."
                                       string-inflection
                                       gptel
                                       gcmh
-                                      (aider :location (recipe
-                                                        :fetcher github
-                                                        :repo "tninja/aider"))
+                                      (aidermacs :variables
+                                                  aidermacs-default-chat-mode 'architect
+                                                  aidermacs-default-model "o4-mini-high")
                                       )
 
    ;; A list of packages that cannot be updated.
@@ -680,6 +680,9 @@ before packages are loaded."
   ;; Declare custom prefix for all custom functions
   (spacemacs/declare-prefix "o" "custom")
 
+  ;; Keybinding for aidermacs
+  (spacemacs/set-leader-keys "oa" 'aidermacs-transient-menu) ; Example binding SPC a a
+
   ;; Keybinding to run projectile project with SPC-pj
   (spacemacs/set-leader-keys "pj" 'projectile-run-project)
 
@@ -863,6 +866,7 @@ before packages are loaded."
 
   (require 'gptel)
 
+
   ;; Set high GC limits for startup
   (setq gc-cons-threshold (* 256 1000 1000)
         gc-cons-percentage 0.8)
@@ -876,14 +880,6 @@ before packages are loaded."
     ;; (setopt gcmh-verbose t)
     (setopt gc-cons-percentage 0.2)
     (add-hook 'elpaca-after-init-hook #'gcmh-mode))
-
-  ;; Aider is an AI tool
-  (use-package aider
-    :config
-    (setq aider-args `("--config" ,(expand-file-name "~/.aider.conf.yml")))
-    ;; Use claude-3-5-sonnet cause it is best in aider benchmark
-    ;; Use SPC o a to activate
-    (spacemacs/set-leader-keys "oa" 'aider-transient-menu))
 
   ;; More performance tuning
   (setq read-process-output-max (* 64 1024 1024))
